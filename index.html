@@ -91,6 +91,30 @@
       color: #777;
       margin-bottom: 10px;
     }
+
+    .status-message {
+      margin: 14px auto 0;
+      max-width: 760px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 16px;
+      line-height: 1.4;
+      display: none;
+    }
+
+    .status-message.error {
+      display: block;
+      background: #ffecec;
+      border: 1px solid #f5a6a6;
+      color: #8a1f1f;
+    }
+
+    .status-message.info {
+      display: block;
+      background: #eef6ff;
+      border: 1px solid #99c7f3;
+      color: #1f4f7a;
+    }
   </style>
 </head>
 
@@ -114,24 +138,63 @@
 
   <div class="grid" id="photoGrid"></div>
 
+  <div class="status-message" id="statusMessage"></div>
+
   <div class="last-updated" id="lastUpdated"></div>
 
   <script>
     const TALLY_FORM_URL = "https://tally.so/r/aQAK92";
-    // MANUAL CHANGE: Replace with your actual Tally form link
+    // Replace with your actual Tally form link. Tally must also have its
+    // Google Sheets integration enabled, otherwise scans will not create rows.
 
     const APPS_SCRIPT_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnQF0qL6Fvb4yGbawzj8o68nY7RgrmL7KZVfLzLCtXtweL4t2uBDUfOiBD3b8vbw6gLfM3JLYUIC5EmWV097w2gnaEpxDw-cHtlAMeW7vv32Y9JZUHncAs2EX8aIiJGF-NQxNFNkavT9iEoeA5d4qDqgRjcGohmgz6R21afaalMh_Y0nlHnWHY-DjU9xeN_l0o0N9K6mkXq5F-YkDuHfPyX555VUXG5KNhRnWPU0bvIpv1IgTVuDDubcs72qzn3PmIRo8ozj2rQjmz1_QHG2hjI2M_W40g&lib=MXPDlLk9vS0eIgZFJH2gSSJCV50munUjD";
-    // MANUAL CHANGE: Replace with your Apps Script Web App URL
+    // IMPORTANT: Use the original Apps Script Web App URL that looks like:
+    // https://script.google.com/macros/s/DEPLOYMENT_ID/exec
+    // Do not paste the redirected script.googleusercontent.com/macros/echo URL;
+    // those links are temporary and will stop returning sheet data.
 
-    const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" 
+    const statusMessage = document.getElementById("statusMessage");
+
+    function showStatus(message, type = "info") {
+      statusMessage.textContent = message;
+      statusMessage.className = `status-message ${type}`;
+    }
+
+    function clearStatus() {
+      statusMessage.textContent = "";
+      statusMessage.className = "status-message";
+    }
+
+    function isTemporaryAppsScriptUrl(url) {
+      return url.includes("script.googleusercontent.com/macros/echo");
+    }
+
+    const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data="
       + encodeURIComponent(TALLY_FORM_URL);
 
     document.getElementById("qrCode").src = qrUrl;
 
     async function loadPhotos() {
+      if (isTemporaryAppsScriptUrl(APPS_SCRIPT_URL)) {
+        showStatus(
+          "Apps Script URL is a temporary redirected googleusercontent.com link. Replace APPS_SCRIPT_URL in index.html with the original https://script.google.com/macros/s/.../exec Web App URL, then redeploy this page.",
+          "error"
+        );
+        return;
+      }
+
       try {
-        const response = await fetch(APPS_SCRIPT_URL);
+        const response = await fetch(APPS_SCRIPT_URL, { cache: "no-store" });
+
+        if (!response.ok) {
+          throw new Error(`Apps Script returned HTTP ${response.status}`);
+        }
+
         const teams = await response.json();
+
+        if (!Array.isArray(teams)) {
+          throw new Error("Apps Script response must be a JSON array of teams.");
+        }
 
         const grid = document.getElementById("photoGrid");
         grid.innerHTML = "";
@@ -144,7 +207,7 @@
             <h2>${item.team}</h2>
             <div class="photo-box">
               ${
-                item.photo 
+                item.photo
                 ? `<img src="${item.photo}" alt="${item.team} photo">`
                 : `<div class="empty">No photo uploaded</div>`
               }
@@ -154,11 +217,13 @@
           grid.appendChild(card);
         });
 
+        clearStatus();
         document.getElementById("lastUpdated").innerText =
           "Last updated: " + new Date().toLocaleTimeString();
 
       } catch (error) {
         console.error("Error loading photos:", error);
+        showStatus(`Could not load Google Sheet data: ${error.message}`, "error");
       }
     }
 
