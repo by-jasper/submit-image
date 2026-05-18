@@ -5,17 +5,43 @@
   <title>Future Workplace with AI</title>
 
   <style>
+    :root {
+      --smrt-red: #e31b23;
+      --smrt-green: #00a650;
+      --smrt-blue: #005eb8;
+      --smrt-dark: #152238;
+      --smrt-light: #f7fafc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f4f4f4;
+      background:
+        radial-gradient(circle at 15% 12%, rgba(227,27,35,0.12), transparent 28%),
+        radial-gradient(circle at 88% 18%, rgba(0,166,80,0.14), transparent 24%),
+        linear-gradient(135deg, #f8fbff 0%, #eef4f8 100%);
+      color: var(--smrt-dark);
       text-align: center;
     }
 
     header {
+      position: relative;
       background: #ffffff;
-      padding: 14px 18px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      padding: 18px 22px;
+      box-shadow: 0 8px 24px rgba(21,34,56,0.12);
+      overflow: hidden;
+    }
+
+    header::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 8px;
+      background: linear-gradient(90deg, var(--smrt-red) 0 34%, var(--smrt-green) 34% 68%, var(--smrt-blue) 68% 100%);
     }
 
     .header-bar {
@@ -35,17 +61,50 @@
     h1 {
       margin: 0 0 8px;
       font-size: 34px;
+      color: var(--smrt-dark);
+      letter-spacing: -0.5px;
       text-align: left;
+    }
+
+    .event-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(0,166,80,0.1);
+      color: var(--smrt-green);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .event-badge::before {
+      content: "";
+      display: block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--smrt-red);
+      box-shadow: 16px 0 0 var(--smrt-green), 32px 0 0 var(--smrt-blue);
     }
 
     .qr-box {
       flex: 0 0 auto;
+      padding: 10px;
+      border: 3px solid var(--smrt-green);
+      border-radius: 22px;
+      background: #ffffff;
+      box-shadow: 0 8px 18px rgba(0,166,80,0.16);
     }
 
     .qr-box img {
       display: block;
       width: 180px;
       height: 180px;
+      border-radius: 14px;
     }
 
     .instruction {
@@ -65,24 +124,37 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       grid-template-rows: repeat(2, 1fr);
-      gap: 12px;
-      padding: 14px 18px 8px;
+      gap: 16px;
+      padding: 18px 22px 10px;
     }
 
     .card {
-      background: white;
-      border-radius: 14px;
-      padding: 10px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+      position: relative;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(0,94,184,0.12);
+      border-radius: 18px;
+      padding: 12px;
+      box-shadow: 0 10px 24px rgba(21,34,56,0.14);
       height: 245px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 5px;
+      background: linear-gradient(90deg, var(--smrt-red), var(--smrt-green), var(--smrt-blue));
     }
 
     .card h2 {
-      margin: 2px 0 8px;
+      position: relative;
+      margin: 6px 0 10px;
       font-size: 20px;
+      color: var(--smrt-dark);
     }
 
     .photo-box {
@@ -90,8 +162,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #eeeeee;
-      border-radius: 12px;
+      background:
+        linear-gradient(135deg, rgba(227,27,35,0.08), rgba(0,166,80,0.08)),
+        #eef3f6;
+      border: 2px dashed rgba(0,94,184,0.18);
+      border-radius: 14px;
       overflow: hidden;
     }
 
@@ -102,8 +177,10 @@
     }
 
     .empty {
-      color: #777;
+      color: var(--smrt-dark);
       font-size: 18px;
+      font-weight: 700;
+      opacity: 0.72;
     }
 
     .last-updated {
@@ -184,6 +261,7 @@
         </div>
 
         <div class="instruction">
+          <div class="event-badge">SMRT Event</div>
           <h1>Future Workplace with AI</h1>
           <strong>Scan to upload image</strong>
           Vote within your team and upload the best image your team agrees on to compete with other teams. You can re-upload, but it will overwrite the previous submission.
@@ -396,7 +474,7 @@
             ${
               item.photo
               ? `<img src="${item.photo}" alt="${item.team} photo">`
-              : `<div class="empty">No photo uploaded</div>`
+              : `<div class="empty">No image uploaded</div>`
             }
           </div>
         `;
