@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Team Photo Wall</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      text-align: center;
+    }
+
+    header {
+      background: #ffffff;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 34px;
+    }
+
+    .top-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 30px;
+      margin-top: 15px;
+    }
+
+    .qr-box img {
+      width: 160px;
+      height: 160px;
+    }
+
+    .instruction {
+      font-size: 22px;
+      text-align: left;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 18px;
+      padding: 25px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+      height: 320px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card h2 {
+      margin: 5px 0 10px;
+      font-size: 24px;
+    }
+
+    .photo-box {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #eeeeee;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .photo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .empty {
+      color: #777;
+      font-size: 18px;
+    }
+
+    .last-updated {
+      font-size: 14px;
+      color: #777;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Team Photo Wall</h1>
+
+    <div class="top-section">
+      <div class="qr-box">
+        <img id="qrCode" src="">
+      </div>
+
+      <div class="instruction">
+        <strong>Scan to upload photo</strong><br>
+        Select your team and submit one photo.<br>
+        Latest upload will replace previous photo.
+      </div>
+    </div>
+  </header>
+
+  <div class="grid" id="photoGrid"></div>
+
+  <div class="last-updated" id="lastUpdated"></div>
+
+  <script>
+    const TALLY_FORM_URL = "https://tally.so/r/abc123";
+    // MANUAL CHANGE: Replace with your actual Tally form link
+
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/xxxxx/exec";
+    // MANUAL CHANGE: Replace with your Apps Script Web App URL
+
+    const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" 
+      + encodeURIComponent(TALLY_FORM_URL);
+
+    document.getElementById("qrCode").src = qrUrl;
+
+    async function loadPhotos() {
+      try {
+        const response = await fetch(APPS_SCRIPT_URL);
+        const teams = await response.json();
+
+        const grid = document.getElementById("photoGrid");
+        grid.innerHTML = "";
+
+        teams.forEach(item => {
+          const card = document.createElement("div");
+          card.className = "card";
+
+          card.innerHTML = `
+            <h2>${item.team}</h2>
+            <div class="photo-box">
+              ${
+                item.photo 
+                ? `<img src="${item.photo}" alt="${item.team} photo">`
+                : `<div class="empty">No photo uploaded</div>`
+              }
+            </div>
+          `;
+
+          grid.appendChild(card);
+        });
+
+        document.getElementById("lastUpdated").innerText =
+          "Last updated: " + new Date().toLocaleTimeString();
+
+      } catch (error) {
+        console.error("Error loading photos:", error);
+      }
+    }
+
+    loadPhotos();
+
+    setInterval(loadPhotos, 5000);
+  </script>
+
+</body>
+</html>
