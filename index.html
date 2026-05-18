@@ -14,38 +14,42 @@
 
     header {
       background: #ffffff;
-      padding: 12px 18px;
+      padding: 14px 18px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.12);
     }
 
     .header-bar {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      gap: 18px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 32px;
-      text-align: left;
+      align-items: flex-start;
+      gap: 24px;
     }
 
     .top-section {
       display: flex;
-      justify-content: flex-end;
       align-items: center;
       gap: 22px;
-      margin-top: 8px;
+      min-width: 0;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+      text-align: left;
+    }
+
+    .qr-box {
+      flex: 0 0 auto;
     }
 
     .qr-box img {
-      width: 120px;
-      height: 120px;
+      display: block;
+      width: 180px;
+      height: 180px;
     }
 
     .instruction {
-      flex: 1;
+      max-width: 860px;
       font-size: 18px;
       line-height: 1.3;
       text-align: left;
@@ -174,7 +178,17 @@
 
   <header>
     <div class="header-bar">
-      <h1>Future Workplace with AI</h1>
+      <div class="top-section">
+        <div class="qr-box">
+          <img id="qrCode" src="" alt="QR code for image upload form">
+        </div>
+
+        <div class="instruction">
+          <h1>Future Workplace with AI</h1>
+          <strong>Scan to upload image</strong>
+          Vote within your team and upload the best image your team agrees on to compete with other teams. You can re-upload, but it will overwrite the previous submission.
+        </div>
+      </div>
 
       <div class="controls" aria-label="Image wall controls">
         <button class="control-button reset-button" id="resetDataButton" type="button">
@@ -183,17 +197,6 @@
         <button class="control-button download-button" id="downloadAllButton" type="button" disabled>
           Download all images
         </button>
-      </div>
-    </div>
-
-    <div class="top-section">
-      <div class="instruction">
-        <strong>Scan to upload image</strong>
-        Vote within your team and upload the best image your team agrees on to compete with other teams. You can re-upload, but it will overwrite the previous submission.
-      </div>
-
-      <div class="qr-box">
-        <img id="qrCode" src="" alt="QR code for image upload form">
       </div>
     </div>
   </header>
