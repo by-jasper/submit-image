@@ -115,6 +115,43 @@
       border: 1px solid #99c7f3;
       color: #1f4f7a;
     }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 18px auto 0;
+    }
+
+    .control-button {
+      border: 0;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 12px 20px;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .control-button:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    .control-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .download-button {
+      background: #1677ff;
+      color: #ffffff;
+    }
+
+    .reset-button {
+      background: #d93025;
+      color: #ffffff;
+    }
   </style>
 </head>
 
@@ -133,6 +170,15 @@
         Select your team and submit one photo.<br>
         Latest upload will replace previous photo.
       </div>
+    </div>
+
+    <div class="controls" aria-label="Photo wall controls">
+      <button class="control-button download-button" id="downloadAllButton" type="button" disabled>
+        Download all uploaded images
+      </button>
+      <button class="control-button reset-button" id="resetDataButton" type="button">
+        Reset data
+      </button>
     </div>
   </header>
 
@@ -154,6 +200,10 @@
     // those links are temporary and will stop returning sheet data.
 
     const statusMessage = document.getElementById("statusMessage");
+    const downloadAllButton = document.getElementById("downloadAllButton");
+    const resetDataButton = document.getElementById("resetDataButton");
+    let latestTeams = [];
+    let isResetting = false;
 
     function showStatus(message, type = "info") {
       statusMessage.textContent = message;
@@ -173,18 +223,183 @@
       return /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec(?:[?#].*)?$/.test(url);
     }
 
+    function getUploadedPhotos() {
+      return latestTeams.filter(item => item.photo);
+    }
+
+    function updateControlStates() {
+      downloadAllButton.disabled = getUploadedPhotos().length === 0;
+      resetDataButton.disabled = isResetting;
+    }
+
+    function getFileExtensionFromUrl(url) {
+      try {
+        const pathname = new URL(url).pathname;
+        const extension = pathname.split(".").pop();
+
+        if (extension && extension.length <= 5 && /^[a-z0-9]+$/i.test(extension)) {
+          return extension;
+        }
+      } catch (error) {
+        console.warn("Could not read file extension from URL:", error);
+      }
+
+      return "jpg";
+    }
+
+    function getSafeFileName(teamName, index, photoUrl) {
+      const safeTeamName = String(teamName || `team-${index + 1}`)
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || `team-${index + 1}`;
+
+      return `${safeTeamName}.${getFileExtensionFromUrl(photoUrl)}`;
+    }
+
+    async function downloadImage(photoUrl, fileName) {
+      const link = document.createElement("a");
+      link.style.display = "none";
+      document.body.appendChild(link);
+
+      try {
+        const response = await fetch(photoUrl);
+
+        if (!response.ok) {
+          throw new Error(`Image returned HTTP ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        link.href = objectUrl;
+        link.download = fileName;
+        link.click();
+        URL.revokeObjectURL(objectUrl);
+      } catch (error) {
+        console.warn(`Could not force-download ${photoUrl}; opening original image instead.`, error);
+        link.href = photoUrl;
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.click();
+      } finally {
+        link.remove();
+      }
+    }
+
+    async function downloadAllImages() {
+      const photos = getUploadedPhotos();
+
+      if (photos.length === 0) {
+        showStatus("There are no uploaded images to download yet.", "info");
+        return;
+      }
+
+      downloadAllButton.disabled = true;
+      showStatus(`Starting download for ${photos.length} uploaded image${photos.length === 1 ? "" : "s"}...`, "info");
+
+      for (const [index, item] of photos.entries()) {
+        await downloadImage(item.photo, getSafeFileName(item.team, index, item.photo));
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
+
+      showStatus(`Download started for ${photos.length} uploaded image${photos.length === 1 ? "" : "s"}.`, "info");
+      updateControlStates();
+    }
+
+    async function resetData() {
+      const confirmed = window.confirm(
+        "Reset all submitted photo data? This clears the photo wall data if the Apps Script endpoint supports reset requests."
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      isResetting = true;
+      updateControlStates();
+      showStatus("Resetting photo wall data...", "info");
+
+      try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify({ action: "reset" })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Apps Script returned HTTP ${response.status}`);
+        }
+
+        let result = null;
+        const responseText = await response.text();
+
+        if (responseText) {
+          try {
+            result = JSON.parse(responseText);
+          } catch (error) {
+            console.warn("Reset response was not JSON:", error);
+          }
+        }
+
+        if (result && result.success === false) {
+          throw new Error(result.message || "Apps Script rejected the reset request.");
+        }
+
+        latestTeams = latestTeams.map(item => ({ ...item, photo: "" }));
+        renderPhotos(latestTeams);
+
+        const reloaded = await loadPhotos({ preserveStatus: true });
+        if (reloaded) {
+          showStatus("Photo wall data reset successfully.", "info");
+        }
+      } catch (error) {
+        console.error("Error resetting data:", error);
+        showStatus(`Could not reset photo wall data: ${error.message}. Make sure Apps Script supports POST requests with { action: "reset" }.`, "error");
+      } finally {
+        isResetting = false;
+        updateControlStates();
+      }
+    }
+
+    function renderPhotos(teams) {
+      const grid = document.getElementById("photoGrid");
+      grid.innerHTML = "";
+
+      teams.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+          <h2>${item.team}</h2>
+          <div class="photo-box">
+            ${
+              item.photo
+              ? `<img src="${item.photo}" alt="${item.team} photo">`
+              : `<div class="empty">No photo uploaded</div>`
+            }
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+
+      updateControlStates();
+    }
+
     const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data="
       + encodeURIComponent(TALLY_FORM_URL);
 
     document.getElementById("qrCode").src = qrUrl;
 
-    async function loadPhotos() {
+    async function loadPhotos({ preserveStatus = false } = {}) {
       if (isTemporaryAppsScriptUrl(APPS_SCRIPT_URL)) {
         showStatus(
           "Apps Script URL is a temporary redirected googleusercontent.com link. Replace APPS_SCRIPT_URL in index.html with the original https://script.google.com/macros/s/.../exec Web App URL, then redeploy this page.",
           "error"
         );
-        return;
+        return false;
       }
 
       if (!isOriginalAppsScriptWebAppUrl(APPS_SCRIPT_URL)) {
@@ -192,7 +407,7 @@
           "Apps Script URL must be the original https://script.google.com/macros/s/.../exec Web App URL. Check APPS_SCRIPT_URL in index.html, then redeploy this page.",
           "error"
         );
-        return;
+        return false;
       }
 
       try {
@@ -208,36 +423,26 @@
           throw new Error("Apps Script response must be a JSON array of teams.");
         }
 
-        const grid = document.getElementById("photoGrid");
-        grid.innerHTML = "";
+        latestTeams = teams;
+        renderPhotos(latestTeams);
 
-        teams.forEach(item => {
-          const card = document.createElement("div");
-          card.className = "card";
+        if (!preserveStatus) {
+          clearStatus();
+        }
 
-          card.innerHTML = `
-            <h2>${item.team}</h2>
-            <div class="photo-box">
-              ${
-                item.photo
-                ? `<img src="${item.photo}" alt="${item.team} photo">`
-                : `<div class="empty">No photo uploaded</div>`
-              }
-            </div>
-          `;
-
-          grid.appendChild(card);
-        });
-
-        clearStatus();
         document.getElementById("lastUpdated").innerText =
           "Last updated: " + new Date().toLocaleTimeString();
 
+        return true;
       } catch (error) {
         console.error("Error loading photos:", error);
         showStatus(`Could not load Google Sheet data: ${error.message}`, "error");
+        return false;
       }
     }
+
+    downloadAllButton.addEventListener("click", downloadAllImages);
+    resetDataButton.addEventListener("click", resetData);
 
     loadPhotos();
 
