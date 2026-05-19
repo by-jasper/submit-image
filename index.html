@@ -217,11 +217,6 @@
       color: #ffffff;
     }
 
-    .analyze-button {
-      background: #6f42c1;
-      color: #ffffff;
-    }
-
     .reset-button {
       background: #d93025;
       color: #ffffff;
@@ -250,10 +245,7 @@
           Reset data
         </button>
         <button class="control-button download-button" id="downloadAllButton" type="button" disabled>
-          Download all images (ZIP)
-        </button>
-        <button class="control-button analyze-button" id="analyzeAllButton" type="button" disabled>
-          Analyze with ChatGPT
+          Download all images
         </button>
       </div>
     </div>
@@ -272,9 +264,6 @@
     // Google Sheets integration enabled, otherwise scans will not create rows.
 
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6AyOSZWN0xtxHqDe0RwbLlt20T1pXspVV55HadWiSl8R7YRTGB5-BLxIwLsHie1fECw/exec";
-    const AI_ANALYZE_ENDPOINT = "/api/analyze-images";
-    // Required backend endpoint for AI image analysis, e.g. /api/analyze-images.
-    // Backend can call OpenAI (ChatGPT) or any other LLM vendor.
     // IMPORTANT: Use the original Apps Script Web App URL that looks like:
     // https://script.google.com/macros/s/DEPLOYMENT_ID/exec
     // Do not paste the redirected script.googleusercontent.com/macros/echo URL;
@@ -283,7 +272,6 @@
     const statusMessage = document.getElementById("statusMessage");
     const downloadAllButton = document.getElementById("downloadAllButton");
     const resetDataButton = document.getElementById("resetDataButton");
-    const analyzeAllButton = document.getElementById("analyzeAllButton");
     let latestTeams = [];
     let isResetting = false;
 
@@ -312,7 +300,6 @@
     function updateControlStates() {
       const noPhotos = getUploadedPhotos().length === 0;
       downloadAllButton.disabled = noPhotos;
-      analyzeAllButton.disabled = noPhotos;
       resetDataButton.disabled = isResetting;
     }
 
@@ -392,66 +379,6 @@
         showStatus(`Could not build ZIP file: ${error.message}`, "error");
       } finally {
         updateControlStates();
-      }
-    }
-
-    async function analyzeAllImagesWithAI() {
-      const photos = getUploadedPhotos();
-
-      if (photos.length === 0) {
-        showStatus("There are no uploaded images to analyze yet.", "info");
-        return;
-      }
-
-      const prompt = window.prompt("Enter analysis prompt for AI (e.g. pick the single image closest to futuristic workplace with AI):");
-      if (!prompt || !prompt.trim()) {
-        return;
-      }
-
-      const resultWindow = window.open("", "chatgpt-analysis", "width=920,height=760");
-      if (!resultWindow) {
-        showStatus("Popup blocked. Please allow popups for this page to view analysis output.", "error");
-        return;
-      }
-
-      resultWindow.document.write(`<pre style="font-family: Arial, sans-serif; white-space: pre-wrap; padding: 16px;">Sending ${photos.length} image(s) for analysis...</pre>`);
-
-      if (!AI_ANALYZE_ENDPOINT) {
-        resultWindow.document.body.innerHTML = `<div style="font-family: Arial, sans-serif; padding: 18px; line-height:1.5;">
-          <h2>API setup required</h2>
-          <p>This feature needs a backend API endpoint that calls your AI provider securely.</p>
-          <p>Set <code>AI_ANALYZE_ENDPOINT</code> if needed, and deploy this page together with a backend route at <code>/api/analyze-images</code>.</p>
-          <p><strong>Prompt</strong>: ${prompt.replace(/</g, "&lt;")}</p>
-        </div>`;
-        showStatus("AI analysis endpoint not configured. API setup is required.", "error");
-        return;
-      }
-
-      try {
-        const response = await fetch(AI_ANALYZE_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: prompt.trim(), images: photos.map(item => ({ team: item.team, imageUrl: item.photo })) })
-        });
-
-        if (!response.ok) {
-          throw new Error(`Analysis API returned HTTP ${response.status}`);
-        }
-
-        const result = await response.json();
-        const analysisText = typeof result.analysis === "string" ? result.analysis : JSON.stringify(result, null, 2);
-
-        resultWindow.document.body.innerHTML = `<div style="font-family: Arial, sans-serif; padding: 18px; line-height:1.5;">
-          <h2>AI Image Analysis</h2>
-          <p><strong>Prompt:</strong> ${prompt.replace(/</g, "&lt;")}</p>
-          <p><strong>Response:</strong></p>
-          <pre style="white-space: pre-wrap; background:#f5f7fa; padding: 12px; border-radius: 8px;">${analysisText.replace(/</g, "&lt;")}</pre>
-        </div>`;
-
-        showStatus("AI analysis completed. Review the popup window.", "info");
-      } catch (error) {
-        resultWindow.document.body.innerHTML = `<pre style="font-family: Arial, sans-serif; white-space: pre-wrap; padding: 16px; color: #8a1f1f;">Analysis failed: ${String(error).replace(/</g, "&lt;")}</pre>`;
-        showStatus(`AI analysis failed: ${error.message}`, "error");
       }
     }
 
@@ -591,7 +518,6 @@
     }
 
     downloadAllButton.addEventListener("click", downloadAllImages);
-    analyzeAllButton.addEventListener("click", analyzeAllImagesWithAI);
     resetDataButton.addEventListener("click", resetData);
 
     loadPhotos();
