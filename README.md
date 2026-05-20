@@ -38,3 +38,14 @@ You can keep frontend unchanged. Only replace logic in `server.js` route `/api/a
 ```json
 { "analysis": "..." }
 ```
+
+## Google Apps Script (supports Reset Data button)
+Use `google-apps-script.js` as your Apps Script code. It supports:
+- `GET /exec` -> returns latest team photos.
+- `POST action=reset` or `GET ?action=reset` -> clears the photo column so the wall resets.
+
+After replacing script code:
+1. In Apps Script, click **Deploy > Manage deployments**.
+2. Edit the existing Web App deployment (or create one).
+3. Set **Who has access** to at least your users (or anyone with link as needed).
+4. Click **Deploy** and copy the `/exec` URL into `APPS_SCRIPT_URL` in `index.html`.
