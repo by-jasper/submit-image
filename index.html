@@ -455,10 +455,6 @@
 
       try {
         const resetRequested = await tryResetRequest();
-
-        latestTeams = latestTeams.map(item => ({ ...item, photo: "" }));
-        renderPhotos(latestTeams);
-
         const reloaded = await loadPhotos({ preserveStatus: true });
 
         if (reloaded && getUploadedPhotos().length === 0) {
