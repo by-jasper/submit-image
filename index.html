@@ -382,6 +382,64 @@
       }
     }
 
+    async function tryResetRequest() {
+      const requests = [
+        {
+          label: "POST JSON",
+          run: () => fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "reset" })
+          })
+        },
+        {
+          label: "POST form",
+          run: () => fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+            body: "action=reset"
+          })
+        },
+        {
+          label: "GET query",
+          run: () => fetch(`${APPS_SCRIPT_URL}${APPS_SCRIPT_URL.includes("?") ? "&" : "?"}action=reset`, {
+            cache: "no-store"
+          })
+        }
+      ];
+
+      for (const request of requests) {
+        try {
+          const response = await request.run();
+
+          if (!response.ok) {
+            continue;
+          }
+
+          const text = await response.text();
+          let result = null;
+
+          if (text) {
+            try {
+              result = JSON.parse(text);
+            } catch (error) {
+              console.warn(`Reset response for ${request.label} was not JSON:`, error);
+            }
+          }
+
+          if (result && result.success === false) {
+            throw new Error(result.message || `Apps Script rejected reset via ${request.label}.`);
+          }
+
+          return true;
+        } catch (error) {
+          console.warn(`Reset attempt failed using ${request.label}:`, error);
+        }
+      }
+
+      return false;
+    }
+
     async function resetData() {
       const confirmed = window.confirm(
         "Reset all submitted photo data? This clears the photo wall data if the Apps Script endpoint supports reset requests."
@@ -396,43 +454,27 @@
       showStatus("Resetting photo wall data...", "info");
 
       try {
-        const response = await fetch(APPS_SCRIPT_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-          },
-          body: JSON.stringify({ action: "reset" })
-        });
-
-        if (!response.ok) {
-          throw new Error(`Apps Script returned HTTP ${response.status}`);
-        }
-
-        let result = null;
-        const responseText = await response.text();
-
-        if (responseText) {
-          try {
-            result = JSON.parse(responseText);
-          } catch (error) {
-            console.warn("Reset response was not JSON:", error);
-          }
-        }
-
-        if (result && result.success === false) {
-          throw new Error(result.message || "Apps Script rejected the reset request.");
-        }
+        const resetRequested = await tryResetRequest();
 
         latestTeams = latestTeams.map(item => ({ ...item, photo: "" }));
         renderPhotos(latestTeams);
 
         const reloaded = await loadPhotos({ preserveStatus: true });
-        if (reloaded) {
+
+        if (reloaded && getUploadedPhotos().length === 0) {
           showStatus("Photo wall data reset successfully.", "info");
+          return;
         }
+
+        if (!resetRequested || getUploadedPhotos().length > 0) {
+          showStatus("Reset request sent, but uploaded images are still present. Update your Apps Script to handle action=reset and clear sheet photo URLs.", "error");
+          return;
+        }
+
+        showStatus("Photo wall data reset successfully.", "info");
       } catch (error) {
         console.error("Error resetting data:", error);
-        showStatus(`Could not reset photo wall data: ${error.message}. Make sure Apps Script supports POST requests with { action: "reset" }.`, "error");
+        showStatus(`Could not reset photo wall data: ${error.message}.`, "error");
       } finally {
         isResetting = false;
         updateControlStates();
