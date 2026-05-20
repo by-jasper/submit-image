@@ -442,7 +442,7 @@
 
     async function resetData() {
       const confirmed = window.confirm(
-        "Reset all submitted photo data? This clears the photo wall data if the Apps Script endpoint supports reset requests."
+        "Reset all submitted photo data? This deletes all existing response rows if the Apps Script endpoint supports reset requests."
       );
 
       if (!confirmed) {
@@ -463,7 +463,7 @@
         }
 
         if (!resetRequested || getUploadedPhotos().length > 0) {
-          showStatus("Reset request sent, but uploaded images are still present. Update your Apps Script to handle action=reset and clear sheet photo URLs.", "error");
+          showStatus("Reset request sent, but uploaded images are still present. Update your Apps Script to handle action=reset and delete response rows.", "error");
           return;
         }
 
