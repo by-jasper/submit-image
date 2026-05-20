@@ -22,7 +22,7 @@ function doPost(e) {
 
   return jsonOutput({
     success: false,
-    message: "Unsupported action. Use action=reset to clear uploaded photo URLs."
+    message: "Unsupported action. Use action=reset to clear all response rows."
   });
 }
 
@@ -105,22 +105,14 @@ function resetPhotoColumn() {
     return jsonOutput({ success: true, message: "No response rows to reset.", clearedRows: 0 });
   }
 
-  const headers = data[0];
-  const photoCol = headers.indexOf(PHOTO_HEADER);
-
-  if (photoCol === -1) {
-    throw new Error(`Photo header not found: ${PHOTO_HEADER}`);
-  }
-
   const firstDataRow = 2;
   const numRows = data.length - 1;
-  const column = photoCol + 1;
 
-  sheet.getRange(firstDataRow, column, numRows, 1).clearContent();
+  sheet.deleteRows(firstDataRow, numRows);
 
   return jsonOutput({
     success: true,
-    message: "Photo URLs cleared successfully.",
+    message: "All response rows deleted successfully.",
     clearedRows: numRows
   });
 }
