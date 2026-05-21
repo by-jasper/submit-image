@@ -94,10 +94,8 @@
     }
 
     .grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: repeat(2, 1fr);
-      gap: 16px;
+      column-count: 4;
+      column-gap: 16px;
       padding: 18px 22px 10px;
     }
 
@@ -108,11 +106,31 @@
       border-radius: 18px;
       padding: 12px;
       box-shadow: 0 10px 24px rgba(21,34,56,0.14);
-      height: 245px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      display: inline-block;
+      width: 100%;
+      margin: 0 0 16px;
+      break-inside: avoid;
       overflow: hidden;
+    }
+
+
+
+    @media (max-width: 1200px) {
+      .grid {
+        column-count: 3;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        column-count: 2;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .grid {
+        column-count: 1;
+      }
     }
 
     .card::before {
@@ -131,7 +149,6 @@
     }
 
     .photo-box {
-      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -145,8 +162,9 @@
 
     .photo-box img {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
+      height: auto;
+      display: block;
+      object-fit: contain;
     }
 
     .empty {
