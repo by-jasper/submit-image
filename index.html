@@ -54,8 +54,10 @@
     .top-section {
       display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: center;
+      gap: 16px;
       min-width: 0;
+      flex: 1;
     }
 
     h1 {
@@ -86,18 +88,28 @@
     .instruction {
       max-width: 860px;
       font-size: 18px;
-      line-height: 1.3;
+      line-height: 1.2;
       text-align: left;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
     }
 
     .instruction {
       color: #ffffff;
     }
 
+    .instruction p {
+      margin: 0;
+    }
+
     .instruction strong {
       display: block;
-      font-size: 32px;
-      margin-bottom: 4px;
+      font-size: 22px;
+      margin-top: 4px;
+      margin-bottom: 0;
+      order: 2;
     }
 
     .grid {
@@ -297,8 +309,8 @@
 
         <div class="instruction">
           <h1>Future Workplace with AI</h1>
+          <p>Vote within your team and upload your best selected image. You may re-upload, but only the latest submission will be kept.</p>
           <strong>Scan to upload image</strong>
-          Vote within your team and upload your best selected image. You may re-upload, but only the latest submission will be kept.
         </div>
       </div>
 
