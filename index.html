@@ -55,14 +55,14 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 16px;
+      gap: 20px;
       min-width: 0;
       flex: 1;
     }
 
     h1 {
       margin: 0 0 8px;
-      font-size: 34px;
+      font-size: 28px;
       color: #ffffff;
       letter-spacing: -0.5px;
       text-align: left;
@@ -80,15 +80,15 @@
 
     .qr-box img {
       display: block;
-      width: 90px;
-      height: 90px;
+      width: 84px;
+      height: 84px;
       border-radius: 8px;
     }
 
     .instruction {
       max-width: 860px;
-      font-size: 18px;
-      line-height: 1.2;
+      font-size: 15px;
+      line-height: 1.35;
       text-align: left;
       display: flex;
       flex-direction: column;
@@ -104,12 +104,21 @@
       margin: 0;
     }
 
-    .instruction strong {
-      display: block;
-      font-size: 22px;
-      margin-top: 4px;
-      margin-bottom: 0;
-      order: 2;
+    .qr-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .scan-label {
+      margin: 0;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.2;
+      text-align: center;
     }
 
     .grid {
@@ -303,14 +312,16 @@
   <header>
     <div class="header-bar">
       <div class="top-section">
-        <div class="qr-box">
-          <img id="qrCode" src="" alt="QR code for image upload form">
+        <div class="qr-section">
+          <div class="qr-box">
+            <img id="qrCode" src="" alt="QR code for image upload form">
+          </div>
+          <p class="scan-label">Scan to upload</p>
         </div>
 
         <div class="instruction">
           <h1>Future Workplace with AI</h1>
           <p>Vote within your team and upload your best selected image. You may re-upload, but only the latest submission will be kept.</p>
-          <strong>Scan to upload image</strong>
         </div>
       </div>
 
