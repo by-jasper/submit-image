@@ -304,6 +304,46 @@
       color: #152238;
     }
 
+    .image-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1100;
+      padding: 20px;
+    }
+
+    .image-modal.open {
+      display: flex;
+    }
+
+    .image-modal img {
+      max-width: min(96vw, 1200px);
+      max-height: 88vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 12px;
+      background: #ffffff;
+      padding: 8px;
+    }
+
+    .close-image {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #ffffff;
+      color: #152238;
+    }
+
   </style>
 </head>
 
@@ -343,6 +383,11 @@
     <img id="qrModalImage" src="" alt="Expanded QR code">
   </div>
 
+  <div class="image-modal" id="imageModal" aria-hidden="true">
+    <button class="close-image" id="closeImageButton" type="button">Return to original</button>
+    <img id="imageModalImage" src="" alt="Expanded team image">
+  </div>
+
   <div class="grid" id="photoGrid"></div>
 
   <div class="status-message" id="statusMessage"></div>
@@ -369,6 +414,9 @@
     const qrModal = document.getElementById("qrModal");
     const qrModalImage = document.getElementById("qrModalImage");
     const closeQrButton = document.getElementById("closeQrButton");
+    const imageModal = document.getElementById("imageModal");
+    const imageModalImage = document.getElementById("imageModalImage");
+    const closeImageButton = document.getElementById("closeImageButton");
     let latestTeams = [];
     let isResetting = false;
 
@@ -587,7 +635,7 @@
           <div class="photo-box">
             ${
               item.photo
-              ? `<img src="${item.photo}" alt="${item.team} photo">`
+              ? `<img src="${item.photo}" alt="${item.team} photo" class="team-photo" data-team-photo="true">`
               : `<div class="empty">No image uploaded</div>`
             }
           </div>
@@ -614,6 +662,19 @@
     function closeQrModal() {
       qrModal.classList.remove("open");
       qrModal.setAttribute("aria-hidden", "true");
+    }
+
+    function openImageModal(photoUrl, teamName) {
+      imageModalImage.src = photoUrl;
+      imageModalImage.alt = `${teamName} enlarged image`;
+      imageModal.classList.add("open");
+      imageModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeImageModal() {
+      imageModal.classList.remove("open");
+      imageModal.setAttribute("aria-hidden", "true");
+      imageModalImage.src = "";
     }
 
     async function loadPhotos({ preserveStatus = false } = {}) {
@@ -671,10 +732,25 @@
         closeQrModal();
       }
     });
+    closeImageButton.addEventListener("click", closeImageModal);
+    imageModal.addEventListener("click", event => {
+      if (event.target === imageModal) {
+        closeImageModal();
+      }
+    });
+    document.getElementById("photoGrid").addEventListener("click", event => {
+      const clickedImage = event.target.closest('[data-team-photo="true"]');
+      if (!clickedImage) {
+        return;
+      }
+
+      openImageModal(clickedImage.src, clickedImage.alt.replace(" photo", ""));
+    });
 
     document.addEventListener("keydown", event => {
       if (event.key === "Escape") {
         closeQrModal();
+        closeImageModal();
       }
     });
 
