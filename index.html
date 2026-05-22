@@ -6,11 +6,11 @@
 
   <style>
     :root {
-      --smrt-red: #e31b23;
-      --smrt-dark: #152238;
-      --smrt-light: #f7fafc;
-      --crocodile-green: #2f6b3a;
-      --ribbon-gradient: linear-gradient(90deg, #4f9f5f 0%, #2f6b3a 100%);
+      --smrt-red: #06b6d4;
+      --smrt-dark: #0f172a;
+      --smrt-light: #f0f9fa;
+      --crocodile-green: #334155;
+      --ribbon-gradient: linear-gradient(90deg, #06b6d4 0%, #0891b2 100%);
     }
 
     * {
@@ -74,7 +74,7 @@
       border: 2px solid #ffffff;
       border-radius: 8px;
       background: #ffffff;
-      box-shadow: 0 8px 18px rgba(227,27,35,0.16);
+      box-shadow: 0 8px 18px rgba(6,182,212,0.16);
       cursor: pointer;
     }
 
@@ -130,7 +130,7 @@
     .card {
       position: relative;
       background: rgba(255,255,255,0.96);
-      border: 1px solid rgba(227,27,35,0.12);
+      border: 1px solid rgba(6,182,212,0.12);
       border-radius: 18px;
       padding: 12px;
       box-shadow: 0 10px 24px rgba(21,34,56,0.14);
@@ -680,7 +680,7 @@
     async function loadPhotos({ preserveStatus = false } = {}) {
       if (isTemporaryAppsScriptUrl(APPS_SCRIPT_URL)) {
         showStatus(
-          "Apps Script URL is a temporary redirected googleusercontent.com link. Replace APPS_SCRIPT_URL in index.html with the original https://script.google.com/macros/s/.../exec Web App URL, then redeploy this page.",
+          "Apps Script URL is a temporary redirected googleusercontent.com link. Replace APPS_SCRIPT_URL in index.html with the original https://script.google.com/macros/s/.../exec Web App URL, t[...]
           "error"
         );
         return false;
