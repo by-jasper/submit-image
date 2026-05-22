@@ -680,7 +680,7 @@
     async function loadPhotos({ preserveStatus = false } = {}) {
       if (isTemporaryAppsScriptUrl(APPS_SCRIPT_URL)) {
         showStatus(
-          "Apps Script URL is a temporary redirected googleusercontent.com link. Replace APPS_SCRIPT_URL in index.html with the original https://script.google.com/macros/s/.../exec Web App URL, t[...]
+          "Apps Script URL is a temporary redirected googleusercontent.com link. Replace APPS_SCRIPT_URL in index.html with the original https://script.google.com/macros/s/.../exec Web App URL, then redeploy this page.",
           "error"
         );
         return false;
